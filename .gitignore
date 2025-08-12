@@ -1,0 +1,23 @@
+# Build
+target/
+
+# Maven wrapper cache
+.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Local config / secrets (add samples instead)
+.env
+application-local.properties
+application-prod.properties
+application-secrets.properties
