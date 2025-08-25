@@ -1,52 +1,48 @@
 package com.oussama.studentdemo.service;
 
 import com.oussama.studentdemo.entity.Student;
+import com.oussama.studentdemo.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@Transactional
 public class StudentService {
 
-    private final Map<Long, Student> store = new ConcurrentHashMap<>();
-    private final AtomicLong seq = new AtomicLong(0);
+    private final StudentRepository repo;
 
-    public StudentService() {
-        // seed data
-        create("Alice", 20);
-        create("Bob", 22);
+    public StudentService(StudentRepository repo) {
+        this.repo = repo;
     }
 
     public List<Student> findAll() {
-        return new ArrayList<>(store.values());
+        return repo.findAll();
     }
 
     public Student findById(Long id) {
         if (id == null) throw new IllegalArgumentException("id must not be null");
-        Student s = store.get(id);
-        if (s == null) throw new StudentNotFoundException(id);
-        return s;
+        return repo.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException(id));
     }
 
     public Student create(String name, int age) {
-        long id = seq.incrementAndGet();
-        Student s = new Student(id, name, age);
-        store.put(id, s);
-        return s;
+        // Let JPA generate the id (Student.id must be Long with @GeneratedValue)
+        Student s = new Student(name, age);
+        return repo.save(s);
     }
 
     public Student update(Long id, String name, int age) {
-        Student s = findById(id);
+        Student s = findById(id); // 404 if missing
         s.setName(name);
         s.setAge(age);
-        return s;
+        return repo.save(s);
     }
 
     public void delete(Long id) {
-        if (store.remove(id) == null) throw new StudentNotFoundException(id);
+        if (id == null) throw new IllegalArgumentException("id must not be null");
+        if (!repo.existsById(id)) throw new StudentNotFoundException(id);
+        repo.deleteById(id);
     }
 }
